@@ -1,13 +1,18 @@
 /*-------------------------------------------------------------------------------------------------
 
 	Author:		Destiny Boyer
-	Professor:	Min Chen
-	Class:		CSS343
-	Project:	Assignment 3
+	Date:		2/14/2017
+	Version:	1.0
 
 -------------------------------------------------------------------------------------------------*/
 
 #include "graphl.h"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//																								 //
+//								Constructors / Destructors										 //
+//																								 //
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 /*-------------------------------------------------------------------------------------------------
 
@@ -15,45 +20,51 @@
 
 -------------------------------------------------------------------------------------------------*/
 
-
 GraphL::GraphL(void) {
 
 };
 
 /*-------------------------------------------------------------------------------------------------
 
-	Destructor. Calls make empty to deallocate all memory.
+	Destructor.
 
 -------------------------------------------------------------------------------------------------*/
 
-
 GraphL::~GraphL(void) {
-	makeEmpty();
+
 };
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//																								 //
+//										Public Methods											 //
+//																								 //
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 /*-------------------------------------------------------------------------------------------------
 
-	Method takes in a file stream and populates the adjacency lsit with the correct data.
-	Sets the description for each Graph Node.
+	Method takes in a file stream and populates the adjacencyList with each node's description
+	as well as the adjacent nodes.
+
+	NOTES:	populating node's with data is the responsibility of the NodeData class.
 
 -------------------------------------------------------------------------------------------------*/
 
 void GraphL::buildGraph(ifstream& inFile) {
-	int numNodes;
-	int headNode = 0;
+	int numNodes;		//temp variable for size
+	int headNode = 0;	//temp variables for populating list
 	int toInsert = 0;
 
-	inFile >> numNodes;
+	inFile >> numNodes;		//sets size equal to the number of nodes + 1
 	size = numNodes + 1;
 
-	string nodeName = "";
-	getline(inFile, nodeName);
+	string clearLine = "";
+	getline(inFile, clearLine);
 
 	//inserts nodes with names for each of the head nodes
 	for (int index = 1; index < size; index++) {
 		NodeData* temp = new NodeData();
 		temp->setData(inFile);
-		node_array[index].data = temp;
+		adjacencyList[index].data = temp;
 		temp = nullptr;
 	}
 
@@ -64,18 +75,18 @@ void GraphL::buildGraph(ifstream& inFile) {
 		}
 		//creates new node and inserts it directly to the
 		//Graph Node if there are no other nodes in the list
-		if (node_array[headNode].edgeHead == nullptr) {
+		if (adjacencyList[headNode].edgeHead == nullptr) {
 			EdgeNode* insertNode = new EdgeNode();
 			insertNode->adjacentNode = toInsert;
-			node_array[headNode].edgeHead = insertNode;
-			node_array[headNode].edgeHead->next = nullptr;
+			adjacencyList[headNode].edgeHead = insertNode;
+			adjacencyList[headNode].edgeHead->next = nullptr;
 		//inserts node betweem the Graph Node and
 		//its adjacent node
 		} else {
 			EdgeNode* insertNode = new EdgeNode();
 			insertNode->adjacentNode = toInsert;
-			insertNode->next = node_array[headNode].edgeHead;
-			node_array[headNode].edgeHead = insertNode;
+			insertNode->next = adjacencyList[headNode].edgeHead;
+			adjacencyList[headNode].edgeHead = insertNode;
 		}
 		if (inFile.eof()) {
 			break;
@@ -92,8 +103,8 @@ void GraphL::buildGraph(ifstream& inFile) {
 
 void GraphL::depthFirstSearch(void) {
 	cout << "Depth-first ordering: ";	//prints heading
-	for (int index = 1; index < size; index++) {	//cycles through each unvisited node
-		if (node_array[index].visited == false) {	//in the list
+	for (int index = 1; index < size; index++) {		//cycles through each unvisited node
+		if (adjacencyList[index].visited == false) {
 			dfs(index);
 		}
 	}
@@ -109,8 +120,8 @@ void GraphL::depthFirstSearch(void) {
 void GraphL::displayGraph(void) {
 	cout << "Graph:" << endl;
 	for (int row = 1; row < size; row++) {
-		cout << "Node " << row <<"\t" << *node_array[row].data << endl;
-		EdgeNode* current = node_array[row].edgeHead;
+		cout << "Node " << row <<"\t" << *adjacencyList[row].data << endl;
+		EdgeNode* current = adjacencyList[row].edgeHead;
 		while (current != nullptr) {
 			cout << "   edge " << row << " " << current->adjacentNode << endl;
 			current = current->next;
@@ -118,6 +129,13 @@ void GraphL::displayGraph(void) {
 	}
 	cout << endl;
 };
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//																								 //
+//										Private Methods											 //
+//																								 //
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 /*-------------------------------------------------------------------------------------------------
 
@@ -127,41 +145,13 @@ void GraphL::displayGraph(void) {
 
 void GraphL::dfs(int index) {
 	cout << index << " ";
-	node_array[index].visited = true;
-	EdgeNode* current = node_array[index].edgeHead;
+	adjacencyList[index].visited = true;
+	EdgeNode* current = adjacencyList[index].edgeHead;
 
 	while (current != nullptr) {
-		if (node_array[current->adjacentNode].visited == false) {
+		if (adjacencyList[current->adjacentNode].visited == false) {
 			dfs(current->adjacentNode);
 		}
 		current = current->next;
-	}
-};
-
-/*-------------------------------------------------------------------------------------------------
-
-	Method deallocate all memory allocated in the nodes in the adjacency list.
-
--------------------------------------------------------------------------------------------------*/
-
-void GraphL::makeEmpty(void) {
-	for (int row = 1; row < size; row++) {
-		node_array[row].visited = false;	//sets all nodes visited to false
-		delete node_array[row].data;		//deletes the data
-		node_array[row].data = nullptr;		//nullptr to data
-
-		//if there is a list for that node we need to deallocate memory
-		if (node_array[row].edgeHead != nullptr) {
-			EdgeNode* toDelete = node_array[row].edgeHead;	//ptr to head
-
-			//cycles through list in that row deleting all nodes and
-			//the data for each node
-			while (toDelete != nullptr) {
-				//re-links list
-				node_array[row].edgeHead = node_array[row].edgeHead->next;
-				delete toDelete;
-				toDelete = node_array[row].edgeHead;
-			}
-		}
 	}
 };
